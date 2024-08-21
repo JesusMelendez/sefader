@@ -60,7 +60,7 @@ cols=['Anio.Bitacora',
 'Superficie.sembrada',
 'geometry'
 ]
-prGreen(puntos.info())
+
 pols = gpd.GeoDataFrame.from_file(path_pol,crs='EPSG:4326',encoding='utf8')
 geojson_color = st.sidebar.color_picker("Selecciona el color para la capa Polígonos", "#00ff00") 
 style = {
@@ -99,3 +99,4 @@ st.markdown("""
         #stDecoration {display:none;}
     </style>
 """, unsafe_allow_html=True)
+# user_num_input = st.slider('selecciona')
