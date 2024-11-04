@@ -1,9 +1,6 @@
 *.tmp
 /data
-/test
 /utils
-/pages
-/src
 /venv
 *.log
 # Ignorar archivos de sistema
