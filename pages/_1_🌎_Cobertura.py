@@ -3,14 +3,16 @@ import pandas as pd
 import geopandas as gpd
 import numpy as np
 from utils.con_colors import prGreen,prPurple
-from tools.read import df,capa_regiones
+from tools.read import capa_regiones
 # from tools.indicadores import df_complete
 import leafmap.foliumap as leafmap
+
+
+# import leafmap.maplibregl as leafmap
 from shapely.geometry import Polygon
 from shapely.geometry import Point
-
 import plotly.express as px
-
+import pydeck as pdk
 
 
 #page
@@ -59,13 +61,39 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+
+cortes_csv = {
+    '30 de Septiembre': './data/corte_clean_sept_v2.csv',
+    '30 de Octubre': './data/corte_clean_oct.csv'
+}
+
+cols_csv = ['ID.de.bitacora', 'Tipo.de.superficie', 'ID.del.productor', 'CURP',
+       'ID.parcela',  'Estado.areas','Municipio.areas', 'Tipo.de.bitacora', 'Anio.Bitacora', 'Ciclo',
+       'Regimen.hidrico', 'Superficie.sembrada','Superficie.Total.de.la.parcela', 'Cultivo.1', 'Cultivo.2', 'Cultivo.3',
+        'primary_k', 'Programa', 'type_geometry', 'Region de atencion','CLAVE']
+
+@st.cache_data
+def read_data_csv(path : str,cols : list ) ->  pd.DataFrame:
+    dataset = pd.read_csv(path,usecols=cols)
+    return dataset
+    
+
+
 def app():
     #
     
-
-    fechas_corte = ['30 de Septiembre']
-    selected_date = st.sidebar.selectbox("Fecha de corte",fechas_corte)
-
+    fechas_corte = list(cortes_csv.keys())
+    # selected_date = st.sidebar.selectbox("Fecha de corte",fechas_corte)
+    selected_date = st.sidebar.radio("Fecha de corte",fechas_corte,index=0)
+    
+    df = read_data_csv(cortes_csv[selected_date],cols_csv)
+    #esto meterlo enla dfuncin de lectura
+    df['Tipo.de.superficie'] = df['Tipo.de.superficie'].astype('category')
+    df['Anio.Bitacora'] = df['Anio.Bitacora'].astype('category')
+    df['Region de atencion'] = df['Region de atencion'].astype('category')
+    df['Regimen.hidrico'] = df['Regimen.hidrico'].astype('category')
+    df['Programa'] = df['Programa'].astype('category')
+    
     st.markdown(f"#####  Fecha de corte:  :green[**{selected_date}**]")
     st.html("<br>")
 
@@ -73,7 +101,7 @@ def app():
 
     option_1 =  list(df['Programa'].unique())
     option_2 = list(df['Anio.Bitacora'].unique())
-    option_3 = list(df['Region'].unique())
+    option_3 = list(df['Region de atencion'].unique())
     option_4 = list(df['Regimen.hidrico'].unique())
 
 
@@ -104,7 +132,7 @@ def app():
     if ciclo:
         filtros.append(f"`Anio.Bitacora` in {ciclo}")
     if region:
-        filtros.append(f"Region in {region}")
+        filtros.append(f"Region de atencion in {region}")
     if regimen_h:
         filtros.append(f"`Regimen.hidrico` in {regimen_h}")
 
@@ -139,15 +167,83 @@ def app():
     st.html("<br>")
     n3_1, n3_2 = st.columns([7,3])
 
-    st.write(df_filtrado['Municipio.areas'].value_counts())
+ 
     # map
     with n3_1:
+        
+
+        agrupado=df_filtrado.groupby('CLAVE')['ID.parcela'].count().reset_index()
+        agrupado['CLAVE']=agrupado['CLAVE'].astype(str)
+        # st.write(agrupado.head(2))
+        regiones = gpd.read_file('./data/regiones_oax.geojson',geometry= 'geometry')
+        # regiones['CLAVE'] = regiones['CLAVE'].astype(int)
+
+        # st.write(regiones['CLAVE'].head(2))
+        new_gdf = regiones.merge(agrupado, on="CLAVE", how="outer")
+        new_gdf = gpd.GeoDataFrame(new_gdf, geometry='geometry')
+        
+        
+        
+     
+        
+        ###############################################################################################################################################
+        
+        # initial_view_state = pdk.ViewState(
+        #     latitude=40,
+        #     longitude=-100,
+        #     zoom=3,
+        #     max_zoom=16,
+        #     pitch=60,
+        #     bearing=0,
+        #     height=450,
+        #     width=None,
+        # )
+        
+        # min_value = new_gdf['ID.parcela'].min()
+        # max_value = new_gdf['ID.parcela'].max()
+    
+        # geojson = pdk.Layer(
+        # "SolidPolygonLayer",
+        # data=new_gdf,
+        # pickable=True,
+        # opacity=0.5,
+        # stroked=True,
+        # filled=True,
+        # extruded=True,
+        # wireframe=True,
+        # # get_elevation='ID.parcela',
+        # # elevation_scale=elev_scale,
+        # # get_fill_color="color",
+        # # get_fill_color=color_exp,
+        # get_line_color=[0, 0, 0],
+        # get_line_width=2,
+        # line_width_min_pixels=1,
+        # )
+        # tooltip = {"text": "Name: {Region}"}
+        # layers = [geojson]
+        
+        # r = pdk.Deck(
+        # layers=layers,
+        # initial_view_state=initial_view_state,
+        # map_style="light",
+        # tooltip=tooltip,
+        # )
+        
+        # st.pydeck_chart(r)
+        
+        
+        
+
+        
+        ######################################################################################################################
+        
         m = leafmap.Map(minimap_control=False)
         m.add_tile_layer(
             url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
             name="Google Satellite",
             attribution="Google",
         )
+
 
         m.add_geojson(capa_regiones, layer_name="Municipios Oaxaca",zoom_to_layer=True,info_mode=None)
         m.add_geojson('./data/regiones_oax.geojson',layer_name='Regiones Oaxaca',zoom_to_layer=True,info_mode=None)
