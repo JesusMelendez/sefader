@@ -1,16 +1,5 @@
 import streamlit as st
-import pandas as pd
-import geopandas as gpd
-import numpy as np
-from utils.con_colors import prGreen,prPurple
-from tools.read import df,capa_regiones
 # from tools.indicadores import df_complete
-import leafmap.foliumap as leafmap
-from shapely.geometry import Polygon
-from shapely.geometry import Point
-
-import plotly.express as px
-
 
 
 #page

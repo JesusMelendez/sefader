@@ -2,15 +2,15 @@ import pandas as pd
 from .funciones import read_geojson
 
 global df
-path_file = './data/corte_clean_sept.csv'
+path_file = './data/corte_clean_sept_v2.csv'
 df = pd.read_csv(path_file,encoding='utf8',usecols=['ID.de.bitacora', 'Tipo.de.superficie', 'ID.del.productor', 'CURP',
        'ID.parcela',  'Estado.areas','Municipio.areas', 'Tipo.de.bitacora', 'Anio.Bitacora', 'Ciclo',
        'Regimen.hidrico', 'Superficie.sembrada','Superficie.Total.de.la.parcela', 'Cultivo.1', 'Cultivo.2', 'Cultivo.3',
-        'primary_k', 'Programa', 'type_geometry', 'Region'])
+        'primary_k', 'Programa', 'type_geometry', 'Region de atencion'])
 
 df['Tipo.de.superficie'] = df['Tipo.de.superficie'].astype('category')
 df['Anio.Bitacora'] = df['Anio.Bitacora'].astype('category')
-df['Region'] = df['Region'].astype('category')
+df['Region de atencion'] = df['Region de atencion'].astype('category')
 df['Regimen.hidrico'] = df['Regimen.hidrico'].astype('category')
 df['Programa'] = df['Programa'].astype('category')
 
